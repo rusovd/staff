@@ -112,22 +112,31 @@ class App extends Component {
     this.props.deleteLine(id);
   }
 
-  updateLine = (line) => e => {
+  updateLine = line => e => {
     this.props.updateLine({...line, [e.target.name]: e.target.value });
-    this.setState({curLine: -1})
+    this.setState({curLine: -1});
   }
 
   sortLines = (field, order) => e => {
     this.props.sortLines(field, order);
   }
 
+  countFreq = (arr, key) => {
+    return arr.reduce((prev, curr) => (prev[curr[key]] = ++prev[curr[key]] || 1, prev), {});
+  }
+
+  objToStr = obj => {
+    return Object.entries(obj).map(x=>x.join(": ")).join(" ,   ");
+  }
+
   renderLines = () => {
     let { lines } = this.props;
     lines = this.filterLines(lines);
+    let stat = this.countFreq(lines, 'status');
 
     return (
       <div>
-        <div className="pull-right"><span className="label label-default">Found {lines.length} lines</span></div>
+        <div className="pull-right"><span className="label label-default">{this.objToStr(stat)} | TOTAL: {lines.length} lines</span></div>
         <table className="table table-hover">
           <thead>
             <tr>
@@ -264,7 +273,7 @@ class App extends Component {
 }
 
 const mapStateToProps = state => ({  
-    lines: state  
+  lines: state  
 });
 
 const mapDispatchToProps = dispatch => bindActionCreators({addLine, deleteLine, updateLine, sortLines, fetchLines}, dispatch);
