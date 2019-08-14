@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.js": "/staff/static/js/main.dd890d28.chunk.js",
+    "main.js.map": "/staff/static/js/main.dd890d28.chunk.js.map",
+    "runtime~main.js": "/staff/static/js/runtime~main.3ecf2f01.js",
+    "runtime~main.js.map": "/staff/static/js/runtime~main.3ecf2f01.js.map",
+    "static/css/2.86768bea.chunk.css": "/staff/static/css/2.86768bea.chunk.css",
+    "static/js/2.d164b2c2.chunk.js": "/staff/static/js/2.d164b2c2.chunk.js",
+    "static/js/2.d164b2c2.chunk.js.map": "/staff/static/js/2.d164b2c2.chunk.js.map",
+    "index.html": "/staff/index.html",
+    "precache-manifest.0f667ff5ba5c5420110548b31d2a5597.js": "/staff/precache-manifest.0f667ff5ba5c5420110548b31d2a5597.js",
+    "service-worker.js": "/staff/service-worker.js",
+    "static/css/2.86768bea.chunk.css.map": "/staff/static/css/2.86768bea.chunk.css.map",
+    "static/media/font-awesome.min.css": "/staff/static/media/fontawesome-webfont.fee66e71.woff",
+    "static/media/bootstrap.min.css": "/staff/static/media/glyphicons-halflings-regular.fa277232.woff"
+  }
+}
