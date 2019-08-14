@@ -1,3 +1,5 @@
+// ! TODO: I have too little time for the task, that's why there is no code splitting... So, maybe one day :)
+
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -7,21 +9,17 @@ const RoleList = ['Engineer', 'Sales', 'Customer Support', 'Manager'];
 const StatusList = ['Screen', 'Scheduled', 'Explored', 'Hire'];
 
 class App extends Component {
-
   state = {
     role: RoleList[0],
     status: StatusList[0],
-    curLine: -1
+    curLine: -1,
+    searchFor: ''
   }  
 
-  componentDidMount = () => {
-    this.fetchLines();
-  }
-
-  handleCurLine = id => e => {
-    this.setState({curLine: id})
-  }
-
+  componentDidMount = () => ( this.fetchLines() );
+    
+  handleCurLine = id => e => ( this.setState({curLine: id}) );
+    
   fetchLines = () => {
       const url = "https://jsonplaceholder.typicode.com/users";
       let lines = [];
@@ -47,10 +45,8 @@ class App extends Component {
         });
     }
 
-  onChange = e => {
-    this.setState({[e.target.name]: e.target.value})
-  }
-
+  onChange = e => ( this.setState({[e.target.name]: e.target.value}) );
+    
   handleSubmit = e => {
     e.preventDefault();
 
@@ -58,6 +54,7 @@ class App extends Component {
         role = this.state.role.trim(),
         conOn = this.state.conOn.trim(),
         status = this.state.status.trim();
+
 
     if(!name || !role || !conOn || !status ) {
       return;
@@ -67,10 +64,8 @@ class App extends Component {
     this.clearAddLineFormFields();
   }
 
-  clearAddLineFormFields = () => {
-    document.getElementById("add-comment-form").reset();
-  }
-
+  clearAddLineFormFields = () => ( document.getElementById("add-comment-form").reset() );
+    
   handleSearch = e => {
     e.preventDefault();
 
@@ -78,65 +73,64 @@ class App extends Component {
     return this.filterLines(lines);
   }
 
-  filterLines = lines => {
-
-    if(this.state && this.state.phrase) {
-      const phrase = this.state.phrase.trim();
-
-      return lines.filter(line => {
-
-        if(line.id === phrase) {
-          return 1;
-
-        } else if(line.name.indexOf(phrase) !== -1) {
-          return 1;
-
-        } else if(line.role.indexOf(phrase) !== -1) {
-          return 1;
-
-        } else if(line.conOn.indexOf(phrase) !== -1) {
-          return 1;
-        
-        } else if(line.status.indexOf(phrase) !== -1) {
-          return 1;
-        }       
-
-        return 0;
-      });
-    }
-
-    return lines;
+  escapeExactWordsFromSearchStr = (str, mapObj) => {
+    let re = new RegExp(Object.keys(mapObj).join("|"),"gi");
+    return str.replace(re, (matched) => ( mapObj[matched.toLowerCase()] ) ).replace( /\s\s+/g, ' ' );
   }
 
-  deleteLine = id => e => {
-    this.props.deleteLine(id);
+  multiSearchAnd = (text, searchWords) => (
+    searchWords.every((el) => {
+      return text.match(new RegExp(el,"i"))
+    })
+  )
+
+  multiSearchOr = (text, searchWords) => (
+    searchWords.some((el) => {
+      return text.match(new RegExp(el,"i"))
+    })
+  )
+
+  concatObjValues = (o) =>  [].concat.apply([], Object.values(o)).join(' ');
+  
+  filterLines = lines => {    
+    if(this.state && this.state.searchFor) {
+      let searchFor = this.state.searchFor.trim().toLowerCase();
+      const searchProxyF = searchFor.indexOf(' and ') !== -1 ? this.multiSearchAnd : this.multiSearchOr;      
+      searchFor = this.escapeExactWordsFromSearchStr(searchFor, { and:'', or:'' }).split(' ');
+
+      return lines.filter(line => {        
+        let wholeLine = this.concatObjValues({name: line.name, role: line.role, conOn: line.conOn, status: line.status});
+        return searchProxyF(wholeLine, searchFor);
+      })
+    } else {
+      return lines
+    }    
   }
+
+  deleteLine = id => e => ( this.props.deleteLine(id) );
 
   updateLine = line => e => {
     this.props.updateLine({...line, [e.target.name]: e.target.value });
     this.setState({curLine: -1});
   }
 
-  sortLines = (field, order) => e => {
-    this.props.sortLines(field, order);
-  }
+  sortLines = (field, order) => e => ( this.props.sortLines(field, order) );
+    
+  countFreq = (arr, key) => ( arr.reduce((prev, curr) => (prev[curr[key]] = ++prev[curr[key]] || 1, prev), {}) );
+  
+  objToStr = obj => ( Object.entries(obj).sort().map(x=>x.join(": ")).join(" ,   ") );
 
-  countFreq = (arr, key) => {
-    return arr.reduce((prev, curr) => (prev[curr[key]] = ++prev[curr[key]] || 1, prev), {});
-  }
+  resetSearch = () => ( this.setState({searchFor: '', phrase: ''}) );
 
-  objToStr = obj => {
-    return Object.entries(obj).map(x=>x.join(": ")).join(" ,   ");
-  }
+  startSearch = () => ( this.setState({searchFor: this.state.phrase}) );  
 
   renderLines = () => {
-    let { lines } = this.props;
-    lines = this.filterLines(lines);
+    let lines = this.filterLines( this.props.lines );
     let stat = this.countFreq(lines, 'status');
 
     return (
       <div>
-        <div className="pull-right"><span className="label label-default">{this.objToStr(stat)} | TOTAL: {lines.length} lines</span></div>
+        <div className="pull-left"><span className="label label-primary">{this.objToStr(stat)} &nbsp; | &nbsp; TOTAL: {lines.length} lines</span></div>
         <table className="table table-hover">
           <thead>
             <tr>
@@ -214,10 +208,12 @@ class App extends Component {
 
                     <button
                       type="submit"
+                      onClick={this.startSearch}
                       className="btn btn-primary"><i className="fa fa-search" aria-hidden="true"></i> Search</button>
                     <button
                       type="reset"
-                      className="btn btn-danger"><i className="fa fa-close" aria-hidden="true"></i> Reset</button>
+                      onClick={this.resetSearch}
+                      className="btn btn-danger"><i className="fa fa-recycle" aria-hidden="true"></i> Reset</button>
                   </form>
                 </div>
               </div>
