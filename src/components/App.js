@@ -73,11 +73,6 @@ class App extends Component {
     return this.filterLines(lines);
   }
 
-  escapeExactWordsFromSearchStr = (str, mapObj) => {
-    let re = new RegExp(Object.keys(mapObj).join("|"),"gi");
-    return str.replace(re, (matched) => ( mapObj[matched.toLowerCase()] ) ).replace( /\s\s+/g, ' ' );
-  }
-
   multiSearchAnd = (text, searchWords) => (
     searchWords.every((el) => {
       return text.match(new RegExp(el,"i"))
@@ -96,7 +91,7 @@ class App extends Component {
     if(this.state && this.state.searchFor) {
       let searchFor = this.state.searchFor.trim().toLowerCase();
       const searchProxyF = searchFor.indexOf(' and ') !== -1 ? this.multiSearchAnd : this.multiSearchOr;      
-      searchFor = this.escapeExactWordsFromSearchStr(searchFor, { and:'', or:'' }).split(' ');
+      searchFor = this.replaceByRules(searchFor, { " and ":' ', " or ":' ' }).split(' ');
 
       return lines.filter(line => {        
         let wholeLine = this.concatObjValues({name: line.name, role: line.role, conOn: line.conOn, status: line.status});
@@ -122,11 +117,31 @@ class App extends Component {
 
   resetSearch = () => ( this.setState({searchFor: '', phrase: ''}) );
 
-  startSearch = () => ( this.setState({searchFor: this.state.phrase}) );  
+  startSearch = () => ( this.setState({searchFor: this.state.phrase}) ); 
+
+  replaceByRules = (str, mapObj) => {
+    let re = new RegExp(Object.keys(mapObj).join("|"), "gi");
+    return str.replace(re, (matched) => ( mapObj[matched.toLowerCase()] ) ).replace( /\s\s+/g, ' ' );
+  }
+
+  createListForReplaces = (arr, begin, end) => (
+    arr.reduce( (prev, curr) => ( 
+      ( prev[curr] = (begin + curr + end), prev )
+    ) , {} )
+  )
+
+  highlightTextInGrid = (str, searchFor) => {
+    return this.state && this.state.searchFor 
+    ?
+      this.replaceByRules(str, this.createListForReplaces(searchFor, `<strong style="background-color: #f4d991">`, '</strong>'))
+    : 
+      str
+}
 
   renderLines = () => {
     let lines = this.filterLines( this.props.lines );
     let stat = this.countFreq(lines, 'status');
+    let searchFor = this.replaceByRules( this.state.searchFor.trim().toLowerCase() , { " and ":' ', " or ":' ' }).split(' ') ;
 
     return (
       <div>
@@ -157,13 +172,21 @@ class App extends Component {
           <tbody>
             { lines.map(line => {
               return (
+                
                 <tr key={line.id}>
-                  <td>{line.name}</td>
+                  {/* <td>{line.name}</td>
                   <td>{line.role}</td>
-                  <td>{line.conOn}</td>
+                  <td>{line.conOn}</td> */}
+
+                  <td>{searchFor.length>0 ? <span dangerouslySetInnerHTML={{__html: this.highlightTextInGrid( line.name, searchFor )}}/> : line.name}</td> 
+                  <td>{searchFor.length>0 ? <span dangerouslySetInnerHTML={{__html: this.highlightTextInGrid( line.role, searchFor )}}/> : line.role}</td> 
+                  <td>{searchFor.length>0 ? <span dangerouslySetInnerHTML={{__html: this.highlightTextInGrid( line.conOn, searchFor )}}/> : line.conOn}</td> 
+
                   { this.state.curLine !== line.id 
                     ?
-                      <td className="col-md-2" onClick={this.handleCurLine(line.id)}>{line.status}</td>
+                      <td className="col-md-2" onClick={this.handleCurLine(line.id)}>
+                        {searchFor.length>0 ? <span dangerouslySetInnerHTML={{__html: this.highlightTextInGrid( line.status, searchFor )}}/> : line.status}
+                      </td>                      
                     :
                       <td className="col-md-2">                      
                         <select style={{padding: 0, height:'100%'}} name="status" className="form-control" defaultValue={line.status} onChange={this.updateLine(line)}>

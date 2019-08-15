@@ -1,3 +1,15 @@
+__React/Redux simple example to demonstrate some commonly used features.__<br>
+( React, Redux, Axios, table, grid, add, edit, delete, search, and/or, sort, stats, highlight )
+
+DEMO: https://rusovd.github.io/staff/ <br>
+
+
+![alt text](staff.gif)
+
+
+
+---
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
